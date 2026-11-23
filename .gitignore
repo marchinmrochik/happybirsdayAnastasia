@@ -1,0 +1,36 @@
+# Dependencies and generated output
+/node_modules/
+/dist/
+/coverage/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+*.tsbuildinfo
+
+# Local previews, screenshots and agent metadata
+/.local/
+/.codex/
+/.agents/
+/.openai/
+/.aws/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs, archives and original video exports (the web MP4 stays tracked)
+*.log
+*.zip
+*.mov
+*.MOV
+
+# Editor and operating system files
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
