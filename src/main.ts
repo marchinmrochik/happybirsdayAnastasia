@@ -39,8 +39,8 @@ function go(to: Screen, focus = true) {
 function gift(index: number) {
   const opened = lottery.opened.includes(index);
   const wish = lottery.order[index];
-  if (opened) return `<div class="gift revealed" data-gift="${index}" role="group" aria-label="Подарок ${index + 1}: ${wishes[wish]}"><div class="wish-paper"><span class="paper-pin"></span>${wishIcon(wish)}<span class="wish-prefix">Пусть будет больше</span><strong>${wishes[wish]}</strong><span class="wish-sign">тебе, с любовью</span></div></div>`;
-  return `<button class="gift closed gift-${index}" data-gift="${index}" aria-label="Открыть подарок ${index + 1}" ${lottery.opened.length === 3 ? 'disabled' : ''}>${giftArt(index)}<span class="gift-tap">открыть</span></button>`;
+  if (opened) return `<button class="gift revealed" data-gift="${index}" disabled aria-label="Подарок ${index + 1}: ${wishes[wish]}"><div class="wish-paper"><span class="paper-pin"></span>${wishIcon(wish)}<span class="wish-prefix">Пусть будет больше</span><strong>${wishes[wish]}</strong><span class="wish-sign">тебе, с любовью</span></div></button>`;
+  return `<button class="gift closed gift-${index}${lottery.opened.length === 3 ? ' locked' : ''}" data-gift="${index}" aria-label="Открыть подарок ${index + 1}" ${lottery.opened.length === 3 ? 'disabled' : ''}>${giftArt(index)}<span class="gift-tap">открыть</span></button>`;
 }
 
 function render() {
@@ -66,29 +66,36 @@ function render() {
 function openGift(button: HTMLButtonElement) {
   const index = Number(button.dataset.gift);
   if (revealing || lottery.opened.length >= 3 || lottery.opened.includes(index)) return;
+  const keyboardFocus = button.matches(':focus-visible');
   revealing = true;
   lottery.opened.push(index);
   persistent = saveLottery(lottery);
   app.querySelectorAll<HTMLButtonElement>('.gift.closed').forEach(b => { b.disabled = true; });
   button.classList.add('opening');
+  button.setAttribute('aria-busy', 'true');
   const rect = button.getBoundingClientRect();
-  burst(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  burst(rect.x + rect.width / 2, rect.y + rect.height / 2, { gentle: true });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   revealTimer = setTimeout(() => {
     if (screen !== 'lottery') return;
-    const wasFocused = document.activeElement === button;
+    // Keep the same grid cell: replacing it can change Safari's SVG sizing and scroll anchor.
     const holder = document.createElement('div'); holder.innerHTML = gift(index);
-    button.replaceWith(holder.firstElementChild!);
+    button.innerHTML = holder.firstElementChild!.innerHTML;
+    button.classList.remove('closed', 'opening');
+    button.classList.add('revealed', 'just-revealed');
+    button.removeAttribute('aria-busy');
+    button.setAttribute('aria-label', `Подарок ${index + 1}: ${wishes[lottery.order[index]]}`);
     app.querySelector('#counter')!.textContent = `Открыто ${lottery.opened.length} из 3`;
     app.querySelector('#reveal-status')!.textContent = `Твоё пожелание: ${wishes[lottery.order[index]]}. Открыто ${lottery.opened.length} из 3.`;
     const next = app.querySelector<HTMLButtonElement>('#lottery-next')!;
     if (lottery.opened.length === 3) {
       next.hidden = false;
+      app.querySelectorAll('.gift.closed').forEach(b => b.classList.add('locked'));
       app.querySelector('#lottery-hint')!.textContent = 'Пусть всё это обязательно сбудется!';
-      if (wasFocused) next.focus({ preventScroll: true });
+      if (keyboardFocus) next.focus({ preventScroll: true });
     } else {
       app.querySelectorAll<HTMLButtonElement>('.gift.closed').forEach(b => { b.disabled = false; });
-      if (wasFocused) app.querySelector<HTMLButtonElement>('.gift.closed')?.focus({ preventScroll: true });
+      if (keyboardFocus) app.querySelector<HTMLButtonElement>('.gift.closed')?.focus({ preventScroll: true });
     }
     if (!persistent) app.querySelector<HTMLElement>('.storage-note')!.hidden = false;
     revealing = false;

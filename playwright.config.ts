@@ -8,6 +8,7 @@ export default defineConfig({
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
+    { name: 'webkit-mobile', testMatch: /(?:lottery-layout|visual)\.spec\.ts/, use: { ...devices['iPhone 13'], defaultBrowserType: 'webkit' } },
   ],
   webServer: {
     command: 'npm run preview -- --port 4173 --strictPort',

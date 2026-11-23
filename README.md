@@ -34,7 +34,7 @@ npm run preview
 To run browser checks:
 
 ```sh
-npx playwright install chromium
+npx playwright install chromium webkit
 npm test
 ```
 
